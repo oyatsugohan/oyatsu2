@@ -9,6 +9,6 @@ st.title('フィッシング詐欺対策アプリ')
 user_name = st.text_input ('あなたの名前を教えてください')
 if st.button('挨拶する'):
     if user_name:  # 名前が入力されているかチェック
-        st.success(f' こんにちは、{user_name}さん! 今回はどのようなご用件でしょうか')  # メッセージをハイライト
+        st.success(f' こんにちは、{user_name}さん。 今回はどのようなご用件でしょうか')  # メッセージをハイライト
     else:
         st.error('名前を入力してください。')  # エラーメッセージを表示
