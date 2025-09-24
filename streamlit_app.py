@@ -6,3 +6,4 @@ st.set_page_config(page_title="タイトル", layout="wide")
 
 # タイトルを設定
 st.title('フィッシング詐欺対策アプリ')
+user_name = st.text_input ('あなたの名前を教えてください')
