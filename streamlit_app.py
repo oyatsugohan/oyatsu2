@@ -227,3 +227,4 @@ st.markdown("""
     <p>⚠️ このツールは補助的なものです。最終的な判断は慎重に行ってください。</p>
     <p>Powered by Google Gemini AI</p>
 </div>
+""", unsafe_allow_html=True)
