@@ -544,3 +544,148 @@ st.markdown("""
     <p>Powered by Google Gemini AI & Local Threat Database</p>
 </div>
 """, unsafe_allow_html=True)
+import streamlit as st
+import random
+
+# ページ設定
+st.set_page_config(page_title="🎣 フィッシング詐欺対策アプリ", page_icon="🛡️", layout="wide")
+
+# メールサンプルデータ
+quiz_samples = [
+    {
+        "subject": "【重要】あなたのアカウントが一時停止されました",
+        "content": "お客様のアカウントに不審なアクセスが検出されました。以下のリンクから確認してください。\n→ http://security-update-login.com",
+        "is_phishing": True,
+        "explanation": "正規のドメインではなく、不審なURLを使用しています。"
+    },
+    {
+        "subject": "【Amazon】ご注文ありがとうございます",
+        "content": "ご注文いただいた商品は10月12日に発送されます。ご利用ありがとうございます。",
+        "is_phishing": False,
+        "explanation": "内容は自然で、URLも含まれていません。正規の連絡の可能性が高いです。"
+    },
+    {
+        "subject": "【Apple ID】アカウント情報の確認が必要です",
+        "content": "セキュリティのため、以下のURLから24時間以内に情報を更新してください。\n→ http://apple.login-check.xyz",
+        "is_phishing": True,
+        "explanation": "URLが公式のAppleドメインではありません。典型的なフィッシングサイトの形式です。"
+    },
+    {
+        "subject": "【楽天】ポイント還元のお知らせ",
+        "content": "キャンペーンにより、300ポイントを付与しました。楽天市場をご利用いただきありがとうございます。",
+        "is_phishing": False,
+        "explanation": "不自然なURLや情報要求がなく、自然な表現です。"
+    },
+]
+
+# セッション状態の初期化
+if 'quiz_index' not in st.session_state:
+    st.session_state.quiz_index = 0
+if 'score' not in st.session_state:
+    st.session_state.score = 0
+if 'quiz_order' not in st.session_state:
+    st.session_state.quiz_order = random.sample(range(len(quiz_samples)), len(quiz_samples))
+
+# メニュー
+menu = st.sidebar.radio("📚 メニュー", ["🔍 クイズで学ぶ", "📖 詐欺パターン図鑑", "✅ チェックリスト", "ℹ️ アプリについて"])
+
+# -----------------------------------------
+# クイズページ
+# -----------------------------------------
+if menu == "🔍 クイズで学ぶ":
+    st.title("🎣 フィッシングメールを見抜け！クイズ形式で学ぶ")
+    index = st.session_state.quiz_order[st.session_state.quiz_index]
+    quiz = quiz_samples[index]
+
+    st.subheader(f"✉️ 件名: {quiz['subject']}")
+    st.code(quiz['content'], language='text')
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🚨 フィッシングメールだと思う"):
+            if quiz["is_phishing"]:
+                st.success("✅ 正解です！これはフィッシングメールです。")
+                st.session_state.score += 1
+            else:
+                st.error("❌ 不正解。これは正規のメールの可能性があります。")
+            st.info(f"💡 解説: {quiz['explanation']}")
+            st.session_state.quiz_index += 1
+
+    with col2:
+        if st.button("✅ 安全なメールだと思う"):
+            if not quiz["is_phishing"]:
+                st.success("✅ 正解です！これは正規のメールです。")
+                st.session_state.score += 1
+            else:
+                st.error("❌ 不正解。これはフィッシングの可能性があります。")
+            st.info(f"💡 解説: {quiz['explanation']}")
+            st.session_state.quiz_index += 1
+
+    # クイズ終了
+    if st.session_state.quiz_index >= len(quiz_samples):
+        st.markdown("---")
+        st.success(f"🎉 クイズ終了！あなたのスコア: {st.session_state.score} / {len(quiz_samples)}")
+        if st.button("🔄 もう一度挑戦する"):
+            st.session_state.quiz_index = 0
+            st.session_state.score = 0
+            st.session_state.quiz_order = random.sample(range(len(quiz_samples)), len(quiz_samples))
+
+# -----------------------------------------
+# パターン図鑑ページ
+# -----------------------------------------
+elif menu == "📖 詐欺パターン図鑑":
+    st.title("📖 フィッシング詐欺パターン図鑑")
+    st.markdown("よくある詐欺手口を知って、だまされない力をつけましょう。")
+
+    patterns = [
+        {"title": "アカウント停止系詐欺", "desc": "『あなたのアカウントは一時停止されました』という文言で焦らせ、偽のログインページに誘導します。"},
+        {"title": "ポイント還元詐欺", "desc": "『ポイントがもらえる』『キャンペーンに当選』などでクリックを促すが、実際は情報を盗む目的です。"},
+        {"title": "荷物の再配達詐欺", "desc": "『不在のため荷物を預かっています』というSMSで偽サイトに誘導。"},
+        {"title": "AppleやAmazonを騙る詐欺", "desc": "実在する大手企業を装って、情報入力を促すリンクを送ってきます。"},
+    ]
+    for p in patterns:
+        with st.expander(f"🔍 {p['title']}"):
+            st.write(p['desc'])
+
+# -----------------------------------------
+# チェックリストページ
+# -----------------------------------------
+elif menu == "✅ チェックリスト":
+    st.title("✅ フィッシングメール チェックリスト")
+    st.markdown("怪しいメールを受け取ったら、以下の項目を確認しましょう。")
+
+    checklist = [
+        "送信者のメールアドレスが正規のものか？",
+        "URLが企業の公式ドメインか？（例: amazon.co.jp）",
+        "緊急性を煽る文言が使われていないか？",
+        "個人情報やクレジットカード情報の入力を求められていないか？",
+        "不自然な日本語、翻訳調の文章ではないか？",
+        "リンクをホバーして実際のURLを確認したか？",
+        "添付ファイルが怪しくないか？"
+    ]
+    for item in checklist:
+        st.checkbox(item)
+
+# -----------------------------------------
+# アプリ情報ページ
+# -----------------------------------------
+else:
+    st.title("ℹ️ アプリについて")
+    st.markdown("""
+    このアプリは、情報リテラシー向上のために開発された学習ツールです。  
+    実際の詐欺手口に近い例を元に、ユーザーが安全に学べるように設計されています。
+
+    ### 🎯 目的
+    - フィッシング詐欺を自力で見抜く力をつける
+    - クイズ形式で楽しく学習
+    - よくある手口・対策方法の理解
+
+    ### 📦 技術
+    - Python + Streamlit
+    - ローカル動作 or 社内教育用途
+
+    ### ⚠️ 注意
+    - このアプリは学習用です。実際のメール判別は慎重に行ってください。
+    """)
+    st.success("開発者：あなたの名前 / 学校 / 会社 など")
+
