@@ -592,34 +592,59 @@ menu = st.sidebar.radio("📚 メニュー", ["🔍 クイズで学ぶ", "📖 �
 # -----------------------------------------
 # クイズページ
 # -----------------------------------------
+# -----------------------------------------
+# クイズページ（改良版: 次へボタンで進行）
+# -----------------------------------------
 if menu == "🔍 クイズで学ぶ":
     st.title("🎣 フィッシングメールを見抜け！クイズ形式で学ぶ")
+
+    if 'answered' not in st.session_state:
+        st.session_state.answered = False
+
     index = st.session_state.quiz_order[st.session_state.quiz_index]
     quiz = quiz_samples[index]
 
     st.subheader(f"✉️ 件名: {quiz['subject']}")
     st.code(quiz['content'], language='text')
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🚨 フィッシングメールだと思う"):
-            if quiz["is_phishing"]:
-                st.success("✅ 正解です！これはフィッシングメールです。")
-                st.session_state.score += 1
-            else:
-                st.error("❌ 不正解。これは正規のメールの可能性があります。")
-            st.info(f"💡 解説: {quiz['explanation']}")
+    if not st.session_state.answered:
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🚨 フィッシングメールだと思う"):
+                st.session_state.answered = True
+                if quiz["is_phishing"]:
+                    st.success("✅ 正解です！これはフィッシングメールです。")
+                    st.session_state.score += 1
+                else:
+                    st.error("❌ 不正解。これは正規のメールの可能性があります。")
+                st.info(f"💡 解説: {quiz['explanation']}")
+        with col2:
+            if st.button("✅ 安全なメールだと思う"):
+                st.session_state.answered = True
+                if not quiz["is_phishing"]:
+                    st.success("✅ 正解です！これは正規のメールです。")
+                    st.session_state.score += 1
+                else:
+                    st.error("❌ 不正解。これはフィッシングの可能性があります。")
+                st.info(f"💡 解説: {quiz['explanation']}")
+    else:
+        st.info(f"💡 解説: {quiz['explanation']}")
+        if st.button("➡️ 次へ"):
             st.session_state.quiz_index += 1
+            st.session_state.answered = False
+            if st.session_state.quiz_index >= len(quiz_samples):
+                st.session_state.quiz_index = len(quiz_samples)
+                st.rerun()
 
-    with col2:
-        if st.button("✅ 安全なメールだと思う"):
-            if not quiz["is_phishing"]:
-                st.success("✅ 正解です！これは正規のメールです。")
-                st.session_state.score += 1
-            else:
-                st.error("❌ 不正解。これはフィッシングの可能性があります。")
-            st.info(f"💡 解説: {quiz['explanation']}")
-            st.session_state.quiz_index += 1
+    if st.session_state.quiz_index >= len(quiz_samples):
+        st.markdown("---")
+        st.success(f"🎉 クイズ終了！あなたのスコア: {st.session_state.score} / {len(quiz_samples)}")
+        if st.button("🔄 もう一度挑戦する"):
+            st.session_state.quiz_index = 0
+            st.session_state.score = 0
+            st.session_state.quiz_order = random.sample(range(len(quiz_samples)), len(quiz_samples))
+            st.session_state.answered = False
+
 
     # クイズ終了
     if st.session_state.quiz_index >= len(quiz_samples):
